@@ -1,4 +1,4 @@
-#define AppVersion "0.51"
+#define AppVersion "0.54"
 #ifndef Stage
   #error Pass /DStage pointing to the verified build directory
 #endif
@@ -27,7 +27,16 @@ OutputBaseFilename=doomraVPN-{#AppVersion}-setup-windows-x64
 SetupIconFile=..\assets\doomra.ico
 Compression=lzma2
 SolidCompression=yes
-WizardStyle=modern
+WizardStyle=modern dynamic windows11 includetitlebar hidebevels
+WizardBackColor=#eeeeee
+WizardBackColorDynamicDark=#191919
+WizardImageFile=..\assets\doomra-logo.png
+WizardSmallImageFile=..\assets\doomra-logo.png
+WizardImageBackColor=#eeeeee
+WizardImageBackColorDynamicDark=#191919
+WizardSmallImageBackColor=#eeeeee
+WizardSmallImageBackColorDynamicDark=#191919
+DisableWelcomePage=no
 #ifdef SignRelease
 SignTool=doomra
 SignedUninstaller=yes
@@ -35,6 +44,14 @@ SignedUninstaller=yes
 
 [Languages]
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
+
+[Messages]
+russian.WelcomeLabel1=Установка VPN
+russian.WelcomeLabel2=Установим [name/ver] для Windows и добавим ярлык в меню «Пуск».%n%nНажмите «Далее», чтобы продолжить.
+russian.ReadyLabel1=Всё готово к установке [name].
+russian.InstallingLabel=Устанавливаем VPN…
+russian.FinishedHeadingLabel=VPN установлен
+russian.FinishedLabel=VPN готов к работе. Его можно открыть сейчас или позже из меню «Пуск».
 
 [Files]
 Source: "{#Stage}\doomraVPN.exe"; DestDir: "{app}"; Flags: ignoreversion

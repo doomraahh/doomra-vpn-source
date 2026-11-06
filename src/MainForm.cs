@@ -300,6 +300,8 @@ namespace Luna {
   }
   static int FocusId(string action) {
    if(action=="launch-at-login") return 27; if(action=="connect-at-login") return 28;
+   if(action=="split-apps") return 38;
+   if(action=="split-sites") return 39;
    if(action=="route-all") return 30; if(action=="route-include") return 31; if(action=="route-exclude") return 32; if(action=="app-add") return 33; if(action=="apps-prev") return 34; if(action=="apps-next") return 35; if(action=="kill") return 36; if(action=="network-recover") return 37; if(action.StartsWith("app-remove:")) { int i; return int.TryParse(action.Substring(11),out i)?40+i:-1; }
    if(action=="connect") return 0; if(action=="add") return 1; if(action=="check") return 2; if(action=="list") return 3;
    if(action=="back") return 17; if(action=="delete") return 18; if(action=="confirm-delete") return 19; if(action=="refresh-profile") return 16; if(action=="url") return 9; if(action=="save") return 10; if(action=="dismiss") return 11; if(action=="settings") return 12; if(action=="name") return 13; if(action=="new") return 14; if(action=="theme") return 15;
@@ -449,6 +451,7 @@ namespace Luna {
     if(node.Id=="connect-at-login" && owner.settings.ConnectAtLogin) state|=AccessibleStates.Checked;
     if(node.Id=="kill" && owner.settings.Network.KillSwitch) state|=AccessibleStates.Checked;
     if(node.Id.StartsWith("route-") && node.Id.Substring(6)==owner.settings.Network.Mode) state|=AccessibleStates.Checked;
+    if(node.Id==(owner.settings.Network.ByDomain?"split-sites":"split-apps")) state|=AccessibleStates.Checked;
     if(owner.ContainsFocus && FocusId(node.Id)==owner.focus) state|=AccessibleStates.Focused;
     if(node.Id.StartsWith("server:")) { int index=int.Parse(node.Id.Substring(7)); state|=AccessibleStates.Selectable; if(index==owner.servers.Selected) { state|=AccessibleStates.Selected; if(owner.focus==3 && owner.ContainsFocus) state|=AccessibleStates.Focused; } if(current.Bounds.IsEmpty) state|=AccessibleStates.Offscreen; }
     return state;

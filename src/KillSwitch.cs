@@ -77,9 +77,9 @@ namespace Luna {
     // service HTTPS when the tunnel is unavailable; the UI must disclose it.
     if(layer<2) foreach(byte protocol in new byte[]{6,17})
      rules.Add(new KillSwitchRule { Layer=layer,Weight=80,Application=System.IO.Path.Combine(Environment.SystemDirectory,"svchost.exe"),Port=443,Protocol=protocol });
-    if(p.Mode=="exclude") foreach(string app in p.Applications)
+    if(!p.ByDomain && p.Mode=="exclude") foreach(string app in p.Applications)
      rules.Add(new KillSwitchRule { Layer=layer,Permit=true,Weight=60,Application=app });
-    if(p.Mode=="include") foreach(string app in p.Applications)
+    if(!p.ByDomain && p.Mode=="include") foreach(string app in p.Applications)
      rules.Add(new KillSwitchRule { Layer=layer,Weight=20,Application=app });
     else rules.Add(new KillSwitchRule { Layer=layer,Weight=20 });
    }

@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Luna {
- internal sealed class StartMenuPicker : Form {
+ internal sealed class RoutingPicker : Form {
   readonly TextBox search=new TextBox { Dock=DockStyle.Top,BorderStyle=BorderStyle.None,AccessibleName="Поиск приложений" };
-  readonly ListView list=new ListView { Dock=DockStyle.Fill,View=View.Details,HeaderStyle=ColumnHeaderStyle.None,FullRowSelect=true,HideSelection=false,ShowItemToolTips=true,OwnerDraw=true,BorderStyle=BorderStyle.None,AccessibleName="Приложения из меню Пуск" };
+  readonly ListView list;
   readonly Label status=new Label { Dock=DockStyle.Bottom,Height=34,TextAlign=ContentAlignment.MiddleLeft,Text="Читаем ярлыки меню «Пуск»…" };
   readonly PickerButton add=new PickerButton("Добавить",106,true) { Enabled=false };
   readonly Font menuFont=UiFonts.Native(10);
@@ -20,14 +20,16 @@ namespace Luna {
   readonly HashSet<string> existing;
   Entry[] entries=new Entry[0];
   internal string[] SelectedPaths { get; private set; }
+  internal string SelectedDomain { get; private set; }
 
-  internal StartMenuPicker(IEnumerable<string> existingPaths) {
+  internal RoutingPicker(IEnumerable<string> existingPaths,bool sites=false) {
    existing=new HashSet<string>(existingPaths,StringComparer.OrdinalIgnoreCase);
-   Font=menuFont; Text="Добавить приложение"; StartPosition=FormStartPosition.CenterParent;
+   Font=menuFont; Text=sites?"Добавить сайт":"Добавить приложение"; StartPosition=FormStartPosition.CenterParent;
    BackColor=Palette.Background; ForeColor=Palette.Text;
    AutoScaleDimensions=new SizeF(96,96); AutoScaleMode=AutoScaleMode.Dpi;
    FormBorderStyle=FormBorderStyle.None;
-   ClientSize=new Size(720,460); MinimumSize=new Size(560,365);
+   ClientSize=sites?new Size(560,248):new Size(720,460);
+   MinimumSize=sites?new Size(480,248):new Size(560,365);
    MinimizeBox=MaximizeBox=false; ShowInTaskbar=ShowIcon=false; Padding=new Padding(22,16,22,18);
 
    var header=new Panel { Dock=DockStyle.Top,Height=72 };
@@ -37,8 +39,8 @@ namespace Luna {
     float size=globe.Width-14;
     Dashboard.Symbol(e.Graphics,new RectangleF(0,5,size,size),ForeColor);
    };
-   var heading=new Label { Dock=DockStyle.Top,Height=30,Text="Добавить приложение",Font=headingFont };
-   var description=new Label { Dock=DockStyle.Fill,Text="Раздельное туннелирование  ·  Меню «Пуск»",ForeColor=Palette.Muted };
+   var heading=new Label { Dock=DockStyle.Top,Height=30,Text=Text,Font=headingFont };
+   var description=new Label { Dock=DockStyle.Fill,Text=sites?"Раздельное туннелирование  ·  Сайты":"Раздельное туннелирование  ·  Меню «Пуск»",ForeColor=Palette.Muted };
    var closeArea=new Panel { Dock=DockStyle.Right,Width=38 };
    var close=new PickerButton("",36,false,captionClose:true) { AccessibleName="Закрыть",DialogResult=DialogResult.Cancel };
    closeArea.Controls.Add(close);
@@ -48,6 +50,7 @@ namespace Luna {
    var filter=new Panel { Dock=DockStyle.Top,Height=55 };
    var field=new Panel { Dock=DockStyle.Top,Height=40,Padding=new Padding(38,10,12,0) };
    search.BackColor=Palette.Surface; search.ForeColor=Palette.Text;
+   if(sites) search.AccessibleName="Домен или ссылка на сайт";
    field.Paint+=delegate(object sender,PaintEventArgs e) {
     var g=e.Graphics;
     g.SmoothingMode=SmoothingMode.AntiAlias;
@@ -56,23 +59,40 @@ namespace Luna {
     Dashboard.Line(g,bounds,search.Focused?Palette.Muted:Palette.Border,10);
     float center=field.Height/2f;
     using(var pen=new Pen(Palette.Muted,1.4f)) {
-     g.DrawEllipse(pen,13,center-7,10,10);
-     g.DrawLine(pen,21,center+1,26,center+6);
+     if(sites) {
+      g.DrawEllipse(pen,13,center-7,14,14);
+      g.DrawEllipse(pen,17,center-7,6,14);
+      g.DrawLine(pen,13,center,27,center);
+     } else {
+      g.DrawEllipse(pen,13,center-7,10,10);
+      g.DrawLine(pen,21,center+1,26,center+6);
+     }
     }
    };
    field.MouseDown+=delegate { search.Focus(); };
    search.GotFocus+=delegate { field.Invalidate(); };
    search.LostFocus+=delegate { field.Invalidate(); };
-   search.HandleCreated+=delegate { SendMessage(search.Handle,0x1501,(IntPtr)1,"Поиск по названию или пути"); };
+   search.HandleCreated+=delegate { SendMessage(search.Handle,0x1501,(IntPtr)1,sites?"Домен или ссылка, например example.com":"Поиск по названию или пути"); };
    field.Controls.Add(search); filter.Controls.Add(field);
 
    var buttons=new Panel { Dock=DockStyle.Bottom,Height=38 };
    var actions=new FlowLayoutPanel { Dock=DockStyle.Right,Width=230,FlowDirection=FlowDirection.RightToLeft,WrapContents=false };
    var cancel=new PickerButton("Отмена",100,false) { DialogResult=DialogResult.Cancel };
-   var browse=new PickerButton("Выбрать файл…",162,false) { Dock=DockStyle.Left };
    actions.Controls.AddRange(new Control[]{add,cancel});
-   buttons.Controls.AddRange(new Control[]{actions,browse});
+   buttons.Controls.Add(actions);
    status.ForeColor=Palette.Muted;
+   AcceptButton=add; CancelButton=cancel;
+   if(sites) {
+    Controls.AddRange(new Control[]{status,buttons,filter,header});
+    ConfigureSiteInput();
+    return;
+   }
+
+   var browse=new PickerButton("Выбрать файл…",162,false) { Dock=DockStyle.Left };
+   buttons.Controls.Add(browse);
+   list=new ListView { Dock=DockStyle.Fill,View=View.Details,HeaderStyle=ColumnHeaderStyle.None,
+    FullRowSelect=true,HideSelection=false,ShowItemToolTips=true,OwnerDraw=true,
+    BorderStyle=BorderStyle.None,AccessibleName="Приложения из меню Пуск" };
    StyleList();
    var columns=new Panel { Dock=DockStyle.Top,Height=29,BackColor=Palette.Surface,ForeColor=Palette.Muted };
    columns.Controls.AddRange(new Control[]{
@@ -80,7 +100,6 @@ namespace Luna {
     new Label { Dock=DockStyle.Left,Width=list.Columns[0].Width,Text="Приложение",TextAlign=ContentAlignment.MiddleLeft,Padding=new Padding(9,0,0,0) }
    });
    Controls.AddRange(new Control[]{list,status,buttons,columns,filter,header});
-   AcceptButton=add; CancelButton=cancel;
    search.TextChanged+=delegate { RefreshList(); };
    list.SelectedIndexChanged+=delegate { UpdateSelection(); };
    list.DoubleClick+=delegate { AddSelection(); };
@@ -100,6 +119,29 @@ namespace Luna {
     entries=found.Where(entry=>!existing.Contains(entry.Path)).ToArray();
     RefreshList();
    };
+  }
+
+  void ConfigureSiteInput() {
+   const string hint="Правило применяется к домену и его поддоменам.";
+   status.Text=hint;
+   search.TextChanged+=delegate {
+    add.Enabled=!string.IsNullOrWhiteSpace(search.Text);
+    status.Text=hint;
+    status.ForeColor=Palette.Muted;
+   };
+   add.Click+=delegate {
+    try {
+     string domain=NetworkPolicy.NormalizeDomain(search.Text);
+     if(existing.Contains(domain)) throw new SafeException("Этот сайт уже в списке.");
+     SelectedDomain=domain;
+     DialogResult=DialogResult.OK;
+    } catch(SafeException e) {
+     status.ForeColor=Palette.Light?Color.FromArgb(153,34,46):Color.FromArgb(241,132,142);
+     status.Text=e.Message;
+     search.Focus();
+    }
+   };
+   Shown+=delegate { search.Focus(); };
   }
 
   void DragHeader(object sender,MouseEventArgs e) {
@@ -213,7 +255,9 @@ namespace Luna {
 
   protected override void Dispose(bool disposing) {
    base.Dispose(disposing);
-   if(disposing) { menuFont.Dispose(); headingFont.Dispose(); }
+   if(disposing) {
+    menuFont.Dispose(); headingFont.Dispose();
+   }
   }
 
   internal sealed class Entry {
