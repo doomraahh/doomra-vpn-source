@@ -505,8 +505,9 @@ namespace Luna {
    Test("Connected tray icon preserves the globe outside the badge", delegate {
     using(var stream=typeof(MainForm).Assembly.GetManifestResourceStream("Doomra.Icon"))
     using(var original=new System.Drawing.Icon(stream,16,16))
-    using(var badge=ConnectionBadge.Create(original))
-    using(var source=original.ToBitmap())
+    using(var nativeOriginal=System.Drawing.Icon.FromHandle(original.Handle))
+    using(var badge=ConnectionBadge.LoadTrayIcon(16))
+    using(var source=nativeOriginal.ToBitmap())
     using(var rendered=badge.ToBitmap()) {
      Assert(rendered.Width==16 && rendered.Height==16);
      int matching=0,visible=0;

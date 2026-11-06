@@ -136,7 +136,7 @@ namespace Luna {
   }
   void RefreshConnectionBadge() {
    if(tray==null) return;
-   if(headerOnline && connectedTrayIcon==null) connectedTrayIcon=ConnectionBadge.Create(Icon,SystemInformation.SmallIconSize.Width);
+   if(headerOnline && connectedTrayIcon==null) connectedTrayIcon=ConnectionBadge.LoadTrayIcon(SystemInformation.SmallIconSize.Width);
    tray.Icon=headerOnline?connectedTrayIcon:Icon;
    tray.Text=headerOnline?"VPN · Подключено":"VPN";
    RefreshTaskbarBadge();

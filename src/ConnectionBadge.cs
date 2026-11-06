@@ -2,26 +2,25 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Luna {
  internal static class ConnectionBadge {
-  internal static Icon Create(Icon globe=null,int size=16) {
+  internal static Icon LoadTrayIcon(int size) {
+   using(var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream("Doomra.ConnectedIcon"))
+    return new Icon(stream,size,size);
+  }
+
+  internal static Icon Create() {
+   const int size=16;
    using(var bitmap=new Bitmap(size,size,PixelFormat.Format32bppArgb)) {
     using(var g=Graphics.FromImage(bitmap))
     using(var rim=new SolidBrush(Color.FromArgb(24,40,31)))
     using(var green=new SolidBrush(Color.FromArgb(104,200,135))) {
      g.SmoothingMode=SmoothingMode.AntiAlias;
-     if(globe!=null) {
-      using(var frame=new Icon(globe,size,size))
-      using(var pixels=frame.ToBitmap())
-       g.DrawImageUnscaled(pixels,0,0);
-     }
-     int diameter=globe==null?12:Math.Max(7,size*3/8);
-     int offset=size-diameter-1;
-     int border=globe==null?2:Math.Max(1,size/16);
-     g.FillEllipse(rim,offset,offset,diameter,diameter);
-     g.FillEllipse(green,offset+border,offset+border,diameter-2*border,diameter-2*border);
+     g.FillEllipse(rim,3,3,12,12);
+     g.FillEllipse(green,5,5,8,8);
     }
     IntPtr handle=bitmap.GetHicon();
     try { using(var borrowed=Icon.FromHandle(handle)) return (Icon)borrowed.Clone(); }

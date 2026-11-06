@@ -58,6 +58,6 @@ namespace Luna {
  public class Diagnostics {
   readonly Queue<string> entries=new Queue<string>();
   public void Add(string safeMessage) { lock(entries) { entries.Enqueue(DateTime.Now.ToString("HH:mm:ss")+"  "+safeMessage); while(entries.Count>200) entries.Dequeue(); } }
-  public string Report() { lock(entries) { return "VPN 0.50 | sing-box "+Configuration.CoreVersion+" | Windows "+Environment.OSVersion.Version+"\r\nБез URI, имён серверов, адресов, паролей и ключей. Сырые логи ядра не сохраняются.\r\n\r\n"+string.Join("\r\n",entries.ToArray()); } }
+  public string Report() { lock(entries) { return "VPN 0.51 | sing-box "+Configuration.CoreVersion+" | Windows "+Environment.OSVersion.Version+"\r\nБез URI, имён серверов, адресов, паролей и ключей. Сырые логи ядра не сохраняются.\r\n\r\n"+string.Join("\r\n",entries.ToArray()); } }
  }
 }

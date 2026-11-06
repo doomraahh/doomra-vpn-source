@@ -1,4 +1,4 @@
-#define AppVersion "0.50"
+#define AppVersion "0.51"
 #ifndef Stage
   #error Pass /DStage pointing to the verified build directory
 #endif
