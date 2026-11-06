@@ -1,0 +1,7 @@
+cache/
+dist/
+dist-v*/
+*.user
+*.pdb
+test-output/
+releases/
